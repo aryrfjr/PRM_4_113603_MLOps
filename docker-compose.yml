@@ -1,0 +1,45 @@
+services:
+
+  # PostgreSQL database service
+  # Uses a public official image (no build needed)
+  # TODO: it is being necessary to restart the service dataops-api to get it working
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dataops
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      retries: 5
+    networks:
+      - dataopsnet
+
+  # DataOps REST API
+  dataops-api:
+    build: ./dataops-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - /home/aryjr/fromiomega/pos-doc/UFSCar/MG-NMR:/data  # raw data accessible to the API
+    depends_on:
+      - postgres
+    networks:
+      - dataopsnet
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/dataops
+
+# Docker networks
+networks:
+  dataopsnet:
+    driver: bridge
+
+# Docker-managed persistent volume for PostgreSQL data
+volumes:
+  postgres_data:
