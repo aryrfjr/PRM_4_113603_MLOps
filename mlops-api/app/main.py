@@ -20,12 +20,12 @@ Base.metadata.create_all(bind=engine)
 #
 #######################################################################
 
-API_NAME = "DataOps API for the MLOps workflow used in Phys. Rev. Materials 4, 113603"
+API_NAME = "MLOps API for the MLOps workflow used in Phys. Rev. Materials 4, 113603"
 
 app = FastAPI(
     title=API_NAME,
     version="1.0.0",
-    description="REST API for DataOps tasks like data generation, augmentation, and building feature store (DBIs).",
+    description="REST API for MLOps tasks like data generation, augmentation, and building feature store (DBIs).",
 )
 
 #
@@ -44,7 +44,7 @@ app.add_middleware(
 # API Routers
 #
 #######################################################################
-app.include_router(v1_endpoints.router, prefix="/v1", tags=["DataOps API V1"])
+app.include_router(v1_endpoints.router, prefix="/v1", tags=["MLOps API V1"])
 
 
 #

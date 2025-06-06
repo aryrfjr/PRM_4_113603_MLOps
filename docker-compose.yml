@@ -2,55 +2,155 @@ services:
 
   # PostgreSQL database service
   # Uses a public official image (no build needed)
-  # TODO: it is being necessary to restart the service dataops-api to get it working
+  # TODO: it is being necessary to restart the service mlops-api to get it working
   postgres:
     image: postgres:15
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: dataops
+      POSTGRES_DB: mlops
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 10s
       retries: 5
     networks:
-      - dataopsnet
+      - mlopsnet
 
-  # DataOps REST API
-  dataops-api:
-    build: ./dataops-api
+  # Airflow Webserver UI
+  # Uses the official Airflow image (no build needed)
+  airflow-webserver:
+    image: apache/airflow:2.8.1
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+      AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+    command: webserver
+    networks:
+      - mlopsnet
+
+  # Airflow Scheduler
+  # Uses the official Airflow image (no build needed)
+  airflow-scheduler:
+    image: apache/airflow:2.8.1
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+    command: scheduler
+    networks:
+      - mlopsnet
+
+  # Airflow Init - runs DB migrations and creates the admin user
+  # Uses the official Airflow image (no build needed)
+  airflow-init:
+    image: apache/airflow:2.8.1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+    entrypoint: bash
+    command: -c "
+      airflow db migrate && \
+      airflow users create \
+        --username admin \
+        --password admin \
+        --firstname Admin \
+        --lastname User \
+        --role Admin \
+        --email admin@example.com"
+    networks:
+      - mlopsnet
+
+  # MLflow Tracking Server
+  # Custom-built image (from ./mlflow) with explicit image name following the project naming standard
+  mlflow:
+    build:
+      context: ./mlflow
+    image: aryjr/prm_4_113603_mlops-p1-mlflow:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    environment:
+      - BACKEND_STORE_URI=postgresql://mlflow:mlflow@postgres:5432/mlflow
+      - ARTIFACT_ROOT=/mlflow/artifacts
+    volumes:
+      - ./mlflow/artifacts:/mlflow/artifacts
+    command: >
+      mlflow server
+      --backend-store-uri postgresql://mlflow:mlflow@postgres/mlflow
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000
+    networks:
+      - mlopsnet
+
+  # MLOps REST API
+  mlops-api:
+    build: ./mlops-api
     ports:
       - "8000:8000"
     volumes:
       - /home/aryjr/fromiomega/pos-doc/UFSCar/MG-NMR:/data  # raw data accessible to the API
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
-      - dataopsnet
+      - mlopsnet
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/dataops
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/mlops
 
   streamlit-app:
-    build: ./dataops-frontend  # Folder with Dockerfile and app.py
+    build: ./mlops-frontend  # Folder with Dockerfile and app.py
     ports:
       - "8501:8501"
     volumes:
-    - ./dataops-frontend:/app  # <--- only for DEV, remove for PROD
+    - ./mlops-frontend:/app  # <--- only for DEV, remove for PROD
     depends_on:
-      - dataops-api
+      - mlops-api
     networks:
-      - dataopsnet
+      - mlopsnet
     environment:
-      - API_URL=http://dataops-api:8000  # Internal Docker network communication
+      - API_URL=http://mlops-api:8000  # Internal Docker network communication
 
 # Docker networks
 networks:
-  dataopsnet:
+  mlopsnet:
     driver: bridge
 
 # Docker-managed persistent volume for PostgreSQL data
