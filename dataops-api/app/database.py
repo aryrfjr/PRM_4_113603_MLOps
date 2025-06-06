@@ -1,3 +1,7 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
+import os
+
 #######################################################################
 #
 # DB session and engine with SQLAlchemy, for working with the DB using
@@ -5,14 +9,8 @@
 #
 #######################################################################
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
-import os
-
 # NOTE: the DATABASE_URL environment variable was defined in docker-compose.yml
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/dataops"
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 #

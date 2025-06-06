@@ -35,6 +35,19 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/dataops
 
+  streamlit-app:
+    build: ./dataops-frontend  # Folder with Dockerfile and app.py
+    ports:
+      - "8501:8501"
+    volumes:
+    - ./dataops-frontend:/app  # <--- only for DEV, remove for PROD
+    depends_on:
+      - dataops-api
+    networks:
+      - dataopsnet
+    environment:
+      - API_URL=http://dataops-api:8000  # Internal Docker network communication
+
 # Docker networks
 networks:
   dataopsnet:
