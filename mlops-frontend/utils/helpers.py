@@ -8,8 +8,10 @@ import os
 #
 ##########################################################################
 
-# NOTE: the API_URL environment variable was defined in docker-compose.yml
+# NOTE: the environment variables were defined in docker-compose.yml
+
 API_URL = os.getenv("API_URL")
+AIRFLOW_API_URL = os.getenv("AIRFLOW_API_URL")
 
 ##########################################################################
 #
