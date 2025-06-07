@@ -1,0 +1,109 @@
+##########################################################################
+#
+# Tests for endpoints for different resources types and scopes
+#
+# TODO: create test suite version of this using 
+#   pytest + httpx.TestClient (see (FastAPI) Good practices)
+#
+##########################################################################
+
+#
+# CRUD for DB table nominal_compositions
+#
+########################################################################
+
+### Create a nominal composition
+POST http://localhost:8000/v1/nominal_compositions/
+Content-Type: application/json
+
+{
+  "name": "Zr49Cu49Al2",
+  "description": "Zirconium-based bulk metallic glass."
+}
+
+###
+
+### Get a nominal composition by name
+GET http://localhost:8000/v1/nominal_compositions/Zr49Cu49Al2
+Accept: application/json
+
+###
+
+### List all nominal compositions
+GET http://localhost:8000/v1/nominal_compositions/
+Accept: application/json
+
+###
+
+### Update a nominal composition
+PUT http://localhost:8000/v1/nominal_compositions/Zr49Cu49Al2
+Content-Type: application/json
+
+{
+  "name": "Zr48Cu50Al2",
+  "description": "Updated composition for experimentation."
+}
+
+###
+
+### Delete a nominal composition
+DELETE http://localhost:8000/v1/nominal_compositions/Zr48Cu50Al2
+
+#
+# Endpoints scoped to the Data Generation & Labeling (DataOps) phase,
+# which includes the following steps:
+#
+# - Generate (DataOps phase; exploration/exploitation)
+# - ETL model (DataOps phase; Feature Store Lite)
+#
+########################################################################
+
+### Schedule exploration (DataOps)
+POST http://localhost:8000/v1/generate/Zr49Cu49Al2
+Content-Type: application/json
+
+{
+  "num_simulations": 3
+}
+
+###
+
+### Schedule augmentation for a run
+POST http://localhost:8000/v1/generate/Zr49Cu49Al2/run123/augment
+Accept: application/json
+
+###
+
+### Schedule ETL model generation
+POST http://localhost:8000/v1/etl-model
+Content-Type: application/json
+
+{
+  "nominal_composition": "Zr49Cu49Al2"
+}
+
+#
+# Endpoints scoped to the Model Development (ModelOps) phase,
+# which includes the single step:
+#
+# - Train/Tune (observability or model evaluation in the ModelOps phase)
+#
+########################################################################
+
+### Schedule model evaluation
+POST http://localhost:8000/v1/evaluate
+Content-Type: application/json
+
+{
+  "model_name": "rf_baseline_v1",
+  "test_set": "Zr49Cu49Al2_test"
+}
+
+#
+# Miscellaneous
+#
+########################################################################
+
+### Ping check
+GET http://localhost:8000/v1/ping
+Accept: application/json
