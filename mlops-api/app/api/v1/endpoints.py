@@ -26,7 +26,7 @@ DATA_ROOT = FilePath("/data/ML/big-data-full")
 
 ##########################################################################
 #
-# Endpoints for different resources types and scopes.
+# Endpoints for different resources types and scopes
 #
 # TODO: review status codes.
 #
@@ -165,11 +165,11 @@ def delete_nominal_composition(name: str, db: Session = Depends(get_db)):
 
 
 #
-# Endpoints scoped to the Data Generation & Labeling (DataOps) phase.
-# It includes the following steps:
+# Endpoints scoped to the Data Generation & Labeling (DataOps) phase,
+# which includes the following steps:
 #
-# - Generate (DataOps phase; exploration/exploitation).
-# - ETL model (DataOps phase; Feature Store Lite).
+# - Generate (DataOps phase; exploration/exploitation)
+# - ETL model (DataOps phase; Feature Store Lite)
 #
 ########################################################################
 
@@ -206,7 +206,7 @@ def schedule_augmentation(
     )
 
 
-# Schedules ETL model (DBI building; ) for a given nominal composition
+# Schedules ETL model (DBI building) for a given nominal composition
 @router.post(
     "/etl-model",
     response_model=schemas.ETLModelResponse,
@@ -218,7 +218,7 @@ def schedule_etl_model(payload: schemas.ETLModelRequest, db: Session = Depends(g
     # NOTE: The ETL model is a two step process originally implemented with the
     # scripts 'create_SSDB.py' (for a single NC) and 'mix_SSDBs.py' (for multiple NCs).
     #
-    # TODO: update the request payload for that reality.
+    # TODO: update the request payload to meet that reality.
 
     return schemas.ETLModelResponse(
         message=f"ETL model build scheduled for '{payload.nominal_composition}'.",
@@ -227,10 +227,10 @@ def schedule_etl_model(payload: schemas.ETLModelRequest, db: Session = Depends(g
 
 
 #
-# Endpoints scoped to the Model Development (ModelOps) phase.
-# It includes the single step:
+# Endpoints scoped to the Model Development (ModelOps) phase,
+# which includes the single step:
 #
-# - Train/Tune (observability or model evaluation in the ModelOps phase).
+# - Train/Tune (observability or model evaluation in the ModelOps phase)
 #
 ########################################################################
 

@@ -74,7 +74,7 @@ class GenericStatusResponse(BaseModel):
 # NOTE: The ETL model is a two step process originally implemented with the
 # scripts 'create_SSDB.py' (for a single NC) and 'mix_SSDBs.py' (for multiple NCs).
 #
-# TODO: update the request payload for that reality.
+# TODO: update the request payload to meet that reality.
 class ETLModelRequest(BaseModel):
     nominal_composition: str = Field(..., example="Zr49Cu49Al2")
 
