@@ -52,7 +52,11 @@ def explore_cells(dag):
             "nominal_composition", "NO_NC_SELECTED_IN_FRONTEND"
         )
 
-        response = requests.post(f"{API_URL}/v1/generate/{nc}")
+        nsims = kwargs["dag_run"].conf.get("num_simulations", -1)
+
+        response = requests.post(
+            f"{API_URL}/v1/generate/{nc}", json={"num_simulations": nsims}
+        )
 
         if response.status_code != 202:
             raise AirflowFailException(

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import (
     String,
     Text,
@@ -33,7 +33,9 @@ class NominalComposition(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.now(timezone.utc)
+    )
 
     runs = relationship(
         "Run", back_populates="nominal_composition", cascade="all, delete-orphan"
@@ -58,8 +60,12 @@ class Run(Base):
     )
     run_number: Mapped[int] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="SCHEDULED")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.now(timezone.utc)
+    )
 
     nominal_composition = relationship("NominalComposition", back_populates="runs")
     sub_runs = relationship(
@@ -85,7 +91,9 @@ class SubRun(Base):
     )
     sub_run_number: Mapped[int] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="SCHEDULED")
-    scheduled_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    scheduled_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.now(timezone.utc)
+    )
     completed_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     run = relationship("Run", back_populates="sub_runs")
@@ -120,7 +128,9 @@ class DescriptorFile(Base):
     file_path: Mapped[str] = mapped_column(Text, nullable=False)
     file_size: Mapped[int] = mapped_column(nullable=True)
     checksum: Mapped[str] = mapped_column(String(64), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.now(timezone.utc)
+    )
 
     sub_run = relationship("SubRun", back_populates="descriptor_files")
     bonds = relationship("BondInteraction", back_populates="descriptor_file")
@@ -150,7 +160,9 @@ class SimulationArtifact(Base):
     file_path: Mapped[str] = mapped_column(Text, nullable=False)
     file_size: Mapped[int] = mapped_column(nullable=True)
     checksum: Mapped[str] = mapped_column(String(64), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.now(timezone.utc)
+    )
 
     sub_run = relationship("SubRun", back_populates="simulation_artifacts")
 
@@ -199,7 +211,9 @@ class MixedDatabase(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.now(timezone.utc)
+    )
 
     entries = relationship(
         "MixedDatabaseEntry", back_populates="mixed_db", cascade="all, delete-orphan"

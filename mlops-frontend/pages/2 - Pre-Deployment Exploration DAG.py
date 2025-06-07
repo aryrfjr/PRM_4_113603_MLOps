@@ -37,7 +37,7 @@ if st.button("Trigger DAG"):
 
     dag_id = "pre_deployment_exploration"  # TODO: shouldn't be hardcoded
 
-    api_conf = {"nominal_composition": selected_nc, "n_runs": selected_n_runs}
+    api_conf = {"nominal_composition": selected_nc, "num_simulations": selected_n_runs}
 
     response = requests.post(
         f"{AIRFLOW_API_URL}/api/v1/dags/{dag_id}/dagRuns",

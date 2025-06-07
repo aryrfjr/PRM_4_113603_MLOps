@@ -1,8 +1,9 @@
 services:
 
+# TODO: Avoid production impact by creating a docker-compose.dev.ym
+
   # PostgreSQL database service
   # Uses a public official image (no build needed)
-  # TODO: it is being necessary to restart the service mlops-api to get it working
   postgres:
     image: postgres:15
     restart: always
@@ -128,6 +129,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      - ./mlops-api:/app  # <--- only for DEV, remove for PROD
       - /home/aryjr/fromiomega/pos-doc/UFSCar/MG-NMR:/data  # raw data accessible to the API
     depends_on:
       postgres:
@@ -136,6 +138,9 @@ services:
       - mlopsnet
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/mlops
+      - PYTHONUNBUFFERED=1 # logs and print() statements will flush instantly ... more reliable debugging
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   # Streamlit front-end
   streamlit-app:
