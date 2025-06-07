@@ -20,7 +20,7 @@ Base.metadata.create_all(bind=engine)
 #
 #######################################################################
 
-API_NAME = "MLOps API for the MLOps workflow used in Phys. Rev. Materials 4, 113603"
+API_NAME = "REST API for the MLOps workflow used in Phys. Rev. Materials 4, 113603"
 
 # Define OpenAPI tag groups
 tags_metadata = [
