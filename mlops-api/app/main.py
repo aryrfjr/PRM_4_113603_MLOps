@@ -22,10 +22,27 @@ Base.metadata.create_all(bind=engine)
 
 API_NAME = "MLOps API for the MLOps workflow used in Phys. Rev. Materials 4, 113603"
 
+# Define OpenAPI tag groups
+tags_metadata = [
+    {
+        "name": "DataOps",
+        "description": "Tasks related to data generation, configuration exploration, augmentation, and ETL/DBI creation.",
+    },
+    {
+        "name": "ModelOps",
+        "description": "Tasks related to evaluating trained models on DBI test sets.",
+    },
+    {
+        "name": "CRUD",
+        "description": "Create, read, update, and delete operations.",
+    },
+]
+
 app = FastAPI(
     title=API_NAME,
     version="1.0.0",
     description="REST API for MLOps tasks like data generation, augmentation, and building feature store (DBIs).",
+    openapi_tags=tags_metadata,
 )
 
 #
@@ -44,7 +61,7 @@ app.add_middleware(
 # API Routers
 #
 #######################################################################
-app.include_router(v1_endpoints.router, prefix="/v1", tags=["MLOps API V1"])
+app.include_router(v1_endpoints.router, prefix="/v1")
 
 
 #
