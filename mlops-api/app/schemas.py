@@ -24,6 +24,43 @@ class Status(Enum):
 
 
 #
+# Possible values for 'artifact_type' field in the DB table 'simulation_artifacts'
+#
+##########################################################################
+
+
+class ArtifactType(str, Enum):
+    # LAMMPS
+    LAMMPS_DUMP = "LAMMPS_dump"  # only SubRun 0
+    LAMMPS_LOG = "LAMMPS_log"  # only SubRun 0
+    LAMMPS_INPUT = "LAMMPS_input"  # only SubRun 0
+    LAMMPS_OUTPUT = "LAMMPS_output"  # only SubRun 0
+    LAMMPS_DUMP_XYZ = "LAMMPS_dump_xyz"  # only SubRun 0
+
+    # QE
+    QE_SCF_IN = "QE_scf_in"  # all SubRuns
+    QE_SCF_OUT = "QE_scf_out"  # all SubRuns
+
+    # LOBSTER
+    LOBSTER_INPUT = "LOBSTER_input"  # all SubRuns
+    LOBSTER_INPUT_BND = "LOBSTER_input_bnd"  # all SubRuns
+    LOBSTER_OUTPUT = "LOBSTER_output"  # all SubRuns
+    LOBSTER_RUN_OUTPUT = "LOBSTER_run_output"  # all SubRuns
+    ICOHPLIST = "ICOHPLIST"  # all SubRuns
+
+    # SOAP (optional)
+    SOAP_VECTORS = "SOAP_vectors"  # all SubRuns
+
+
+class SimulationArtifactInfo(BaseModel):
+    artifact_type: ArtifactType
+    file_path: str
+    file_size: Optional[int]
+    checksum: Optional[str]
+    created_at: datetime
+
+
+#
 # CRUD for DB table nominal_compositions
 #
 ########################################################################
@@ -66,9 +103,13 @@ class NominalCompositionResponse(NominalCompositionBase):
 ########################################################################
 
 
+class ScheduleExplorationRequest(BaseModel):
+    num_simulations: int = Field(..., gt=0, example=3)
+
+
 class GenericStatusResponse(BaseModel):
     message: str
-    status: Literal[Status.SCHEDULED, Status.FAILED, Status.DONE, Status.RUNNING]
+    status: Status
 
 
 # NOTE: The ETL model is a two step process originally implemented with the
