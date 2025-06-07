@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 import pandas as pd
-import os
 from utils.helpers import fetch_nominal_compositions
 from utils.helpers import API_URL
 
@@ -16,7 +15,6 @@ from utils.helpers import API_URL
 # Helpers
 #
 ##########################################################################
-
 
 ##########################################################################
 #
