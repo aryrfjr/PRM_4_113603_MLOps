@@ -38,6 +38,7 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
       AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth
+      API_URL: http://mlops-api:8000  # Internal Docker network communication
     ports:
       - "8080:8080"
     volumes:
@@ -62,6 +63,7 @@ services:
       AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth
+      API_URL: http://mlops-api:8000  # Internal Docker network communication
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -135,6 +137,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/mlops
 
+  # Streamlit front-end
   streamlit-app:
     build: ./mlops-frontend  # Folder with Dockerfile and app.py
     ports:
