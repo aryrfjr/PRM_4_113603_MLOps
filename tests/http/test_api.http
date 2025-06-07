@@ -60,7 +60,11 @@ DELETE http://localhost:8000/v1/nominal_compositions/Zr48Cu50Al2
 
 ### Schedule exploration (DataOps)
 POST http://localhost:8000/v1/generate/Zr49Cu49Al2
-Accept: application/json
+Content-Type: application/json
+
+{
+  "num_simulations": 3
+}
 
 ###
 

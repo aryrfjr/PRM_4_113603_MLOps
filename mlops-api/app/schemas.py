@@ -103,6 +103,10 @@ class NominalCompositionResponse(NominalCompositionBase):
 ########################################################################
 
 
+class ScheduleExplorationRequest(BaseModel):
+    num_simulations: int = Field(..., gt=0, example=3)
+
+
 class GenericStatusResponse(BaseModel):
     message: str
     status: Status
