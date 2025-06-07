@@ -150,6 +150,7 @@ services:
       - mlopsnet
     environment:
       - API_URL=http://mlops-api:8000  # Internal Docker network communication
+      - AIRFLOW_API_URL=http://airflow-webserver:8080 # Internal Docker network communication
 
 # Docker networks
 networks:

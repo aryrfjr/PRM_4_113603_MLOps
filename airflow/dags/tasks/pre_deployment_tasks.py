@@ -26,6 +26,10 @@ API_URL = os.getenv("API_URL")
 #   for instance 'nc = dag_run.conf.get("nc", "Zr49Cu49Al2")' and
 #   importing 'from airflow.models import Variable, DagRun'.
 #
+# NOTE: When parameters are passed to an Airflow REST API endpoint,
+#   the conf dictionary is passed via the DAG Run context and can
+#   be retrieved inside any task using the kwargs variable.
+#
 ##########################################################################
 
 #
@@ -40,11 +44,15 @@ API_URL = os.getenv("API_URL")
 
 def explore_cells(dag):
 
-    def _explore():
+    def _explore(**kwargs):
 
-        response = requests.post(
-            f"{API_URL}/generate/Zr49Cu49Al2"
-        )  # TODO: parametrize NC
+        # TODO: the default fallback 'NO_NC_SELECTED_IN_FRONTEND' could be a constant telling
+        #   the DataOps REST API that it didn't come from Streamlit
+        nc = kwargs["dag_run"].conf.get(
+            "nominal_composition", "NO_NC_SELECTED_IN_FRONTEND"
+        )
+
+        response = requests.post(f"{API_URL}/v1/generate/{nc}")
 
         if response.status_code != 202:
             raise AirflowFailException(
@@ -63,7 +71,7 @@ def exploit_augment(dag):
         # TODO: that endpoint will be updated to have a set of id_runs and corresponding
         #   augmentation types in the request payload.
         response = requests.post(
-            f"{API_URL}/generate/Zr49Cu49Al2/21/augment"
+            f"{API_URL}/v1/generate/Zr49Cu49Al2/21/augment"
         )  # TODO: parametrize
 
         if response.status_code != 202:
@@ -90,7 +98,7 @@ def etl_model(dag):
             "interaction_type": "Zr-Cu",
         }
 
-        response = requests.post(f"{API_URL}/etl-model", json=payload)
+        response = requests.post(f"{API_URL}/v1/etl-model", json=payload)
 
         if response.status_code != 202:
             raise AirflowFailException(f"Failed to schedule ETL model: {response.text}")
@@ -118,7 +126,7 @@ def evaluate_model(dag):
             "test_set": "Zr49Cu49Al2",
         }
 
-        response = requests.post(f"{API_URL}/evaluate", json=payload)
+        response = requests.post(f"{API_URL}/v1/evaluate", json=payload)
 
         if response.status_code != 202:
             raise AirflowFailException(
