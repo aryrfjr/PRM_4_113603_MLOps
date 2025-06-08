@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+
 from utils.helpers import fetch_nominal_compositions
 from utils.helpers import AIRFLOW_API_URL
 
