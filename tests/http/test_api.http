@@ -74,6 +74,12 @@ Accept: application/json
 
 ###
 
+### List All Runs created for a given Nominal Composition
+GET http://localhost:8000/v1/runs/Zr49Cu49Al2
+Accept: application/json
+
+###
+
 ### Schedule ETL model generation
 POST http://localhost:8000/v1/etl-model
 Content-Type: application/json

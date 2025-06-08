@@ -358,6 +358,7 @@ def schedule_exploration(
         db.commit()
         db.refresh(run)
 
+    # TODO: if one of the runs fail for some reason must notify the user
     return schemas.GenericStatusResponse(
         message=f"Exploration scheduled for '{nominal_composition}'.",
         status=schemas.Status.SCHEDULED.value,
@@ -379,6 +380,37 @@ def schedule_augmentation(
         message=f"Augmentation scheduled for '{nominal_composition}', run '{id_run}'.",
         status=schemas.Status.SCHEDULED.value,
     )
+
+
+# List All Runs created for a given Nominal Composition
+@router.get(  # TODO: maybe this endpoint won't be used in the screen "3 - Pre-Deployment Exploitation DAG"
+    "/runs/{nominal_composition}",
+    response_model=List[schemas.RunResponse],
+    tags=["DataOps"],
+)
+def list_nominal_composition_runs(
+    nominal_composition: str, db: Session = Depends(get_db)
+):
+
+    runs = (
+        db.query(models.Run)
+        .join(models.Run.nominal_composition)
+        .filter(models.NominalComposition.name == nominal_composition)
+        .order_by(models.Run.run_number)
+        .all()
+    )
+
+    return [schemas.RunResponse.from_orm(run) for run in runs]
+
+
+# TODO: endpoint to return all transformations (sub-runs) of all runs
+#   existing for a selected NC. Let's work with a JSON like this:
+# {
+#     "transformations": [
+#         {"id_run": "1", "sub_runs": ["0", "4", "3", "7"]},
+#         {"id_run": "2", "sub_runs": ["0", "13", "14"]},
+#     ]
+# }
 
 
 # Schedules ETL model (DBI building) for a given nominal composition
