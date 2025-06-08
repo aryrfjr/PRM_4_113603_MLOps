@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Literal
+from typing import Optional
 from datetime import datetime
 from enum import Enum
 
@@ -89,6 +89,23 @@ class NominalCompositionUpdate(BaseModel):
 class NominalCompositionResponse(NominalCompositionBase):
     id: int
     created_at: datetime
+
+    class Config:  # NOTE: Inner class for configuration of the Pydantic model
+        orm_mode = (
+            True  # NOTE: can be created from Object-Relational Mapping (ORM) objects
+        )
+        from_attributes = True
+
+
+#
+# Other resources
+#
+########################################################################
+
+
+class RunResponse(BaseModel):
+    id: int
+    run_number: int
 
     class Config:  # NOTE: Inner class for configuration of the Pydantic model
         orm_mode = (
