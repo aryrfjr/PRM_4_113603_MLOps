@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Dict
 from pathlib import Path as FilePath
 from datetime import datetime, timezone
@@ -342,14 +342,14 @@ def schedule_exploration(
         sub_run = models.SubRun(
             sub_run_number=0,
             simulation_artifacts=artifacts,
-            status=schemas.Status.SCHEDULED.value,  # optional: default already
+            status=schemas.Status.SCHEDULED.value,  # optional: default already; TODO: build an application that will change it
         )
 
         # Create the Run and attach the SubRun
         run = models.Run(
             nominal_composition_id=nc.id,
             run_number=next_run_number,
-            status=schemas.Status.SCHEDULED.value,  # optional
+            status=schemas.Status.SCHEDULED.value,  # optional: default already; TODO: build an application that will change it
             sub_runs=[sub_run],  # ORM relationship binds them
         )
 
@@ -382,35 +382,37 @@ def schedule_augmentation(
     )
 
 
-# List All Runs created for a given Nominal Composition
-@router.get(  # TODO: maybe this endpoint won't be used in the screen "3 - Pre-Deployment Exploitation DAG"
-    "/runs/{nominal_composition}",
-    response_model=List[schemas.RunResponse],
+# List All exploration jobs (Runs) created for a given Nominal Composition
+@router.get(
+    "/exploration-jobs/{nominal_composition}",
     tags=["DataOps"],
 )
 def list_nominal_composition_runs(
-    nominal_composition: str, db: Session = Depends(get_db)
+    nominal_composition: str,
+    exploitation_info: bool = Query(
+        default=False,
+        description="Whether to include exploitation (augmentation; SubRuns) details",
+    ),
+    db: Session = Depends(get_db),
 ):
 
-    runs = (
+    query = (
         db.query(models.Run)
         .join(models.Run.nominal_composition)
         .filter(models.NominalComposition.name == nominal_composition)
-        .order_by(models.Run.run_number)
-        .all()
     )
 
-    return [schemas.RunResponse.from_orm(run) for run in runs]
+    if exploitation_info:
+        query = query.order_by(models.Run.run_number).options(
+            joinedload(models.Run.sub_runs)
+        )
 
+    runs = query.all()
 
-# TODO: endpoint to return all transformations (sub-runs) of all runs
-#   existing for a selected NC. Let's work with a JSON like this:
-# {
-#     "transformations": [
-#         {"id_run": "1", "sub_runs": ["0", "4", "3", "7"]},
-#         {"id_run": "2", "sub_runs": ["0", "13", "14"]},
-#     ]
-# }
+    if exploitation_info:
+        return [schemas.ExplorationJobFullResponse.from_orm(run) for run in runs]
+    else:
+        return [schemas.ExplorationJobBaseResponse.from_orm(run) for run in runs]
 
 
 # Schedules ETL model (DBI building) for a given nominal composition

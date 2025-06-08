@@ -1,11 +1,11 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from enum import Enum
 
 ########################################################################
 #
-# Pydantic models for request/response
+# Pydantic schemas for request/response
 #
 ########################################################################
 
@@ -103,15 +103,36 @@ class NominalCompositionResponse(NominalCompositionBase):
 ########################################################################
 
 
-class RunResponse(BaseModel):
+class ExploitationJobResponse(BaseModel):
     id: int
-    run_number: int
+    sub_run_number: int
+    status: str
+    scheduled_at: datetime
+    completed_at: Optional[datetime]
 
     class Config:  # NOTE: Inner class for configuration of the Pydantic model
         orm_mode = (
             True  # NOTE: can be created from Object-Relational Mapping (ORM) objects
         )
         from_attributes = True
+
+
+class ExplorationJobBaseResponse(BaseModel):
+    id: int
+    run_number: int
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:  # NOTE: Inner class for configuration of the Pydantic model
+        orm_mode = (
+            True  # NOTE: can be created from Object-Relational Mapping (ORM) objects
+        )
+        from_attributes = True
+
+
+class ExplorationJobFullResponse(ExplorationJobBaseResponse):
+    sub_runs: List[ExploitationJobResponse] = []
 
 
 #

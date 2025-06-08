@@ -74,8 +74,12 @@ Accept: application/json
 
 ###
 
-### List All Runs created for a given Nominal Composition
-GET http://localhost:8000/v1/runs/Zr49Cu49Al2
+### List All exploration jobs (Runs) created for a given Nominal Composition
+GET http://localhost:8000/v1/exploration-jobs/Zr49Cu49Al2
+Accept: application/json
+
+### List All exploration jobs (Runs) created for a given Nominal Composition including exploitation idata (SubRuns)
+GET http://localhost:8000/v1/exploration-jobs/Zr49Cu49Al2?exploitation_info=true
 Accept: application/json
 
 ###
