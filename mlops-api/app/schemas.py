@@ -98,7 +98,7 @@ class NominalCompositionResponse(NominalCompositionBase):
 
 
 #
-# Other resources
+# Data Generation & Labeling (DataOps) phase
 #
 ########################################################################
 
@@ -135,14 +135,18 @@ class ExplorationJobFullResponse(ExplorationJobBaseResponse):
     sub_runs: List[ExploitationJobResponse] = []
 
 
-#
-# Data Generation & Labeling (DataOps) phase
-#
-########################################################################
-
-
 class ScheduleExplorationRequest(BaseModel):
     num_simulations: int = Field(..., gt=0, example=3)
+
+
+class RunWithSubRunIds(BaseModel):
+    id: int
+    run_number: int
+    sub_runs: List[int]
+
+
+class ScheduleExploitationRequest(BaseModel):
+    runs: List[RunWithSubRunIds]
 
 
 class GenericStatusResponse(BaseModel):
