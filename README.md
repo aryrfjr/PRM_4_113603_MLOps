@@ -58,7 +58,7 @@ Below is an illustration of the MLOps workflow in terms of the Generate+ETL (GET
 
   - Satisfactory performance demonstrated with small training sets.
 
-## 📐 Architecture Diagram of the MLOps system implemented in this repository
+## 📐 Architecture Diagram of the MLOps System
 
 ![MLOPs system architecture](img/PRM_4_113603_MLOps_Architecture.drawio.png)
 
