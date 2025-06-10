@@ -47,7 +47,7 @@ Content-Type: application/json
 ###
 
 ### Delete a nominal composition
-DELETE http://localhost:8000/v1/nominal_compositions/Zr48Cu50Al2
+DELETE http://localhost:8000/v1/nominal_compositions/Zr49Cu49Al2
 
 #
 # Endpoints scoped to the Data Generation & Labeling (DataOps) phase,
@@ -68,14 +68,31 @@ Content-Type: application/json
 
 ###
 
-### Schedule augmentation for a run
-POST http://localhost:8000/v1/generate/Zr49Cu49Al2/run123/augment
-Accept: application/json
+### Schedule exploration (DataOps; augmentation) for multiple runs
+POST http://localhost:8000/v1/generate/Zr49Cu49Al2/augment
+Content-Type: application/json
+
+{ "runs": [
+  {
+    "id": 1,
+    "run_number": 1,
+    "sub_runs": [1,2,3,4,5]
+  },
+  {
+    "id": 2,
+    "run_number": 2,
+    "sub_runs": [6,7,13,14]
+  }
+]}
 
 ###
 
-### List All Runs created for a given Nominal Composition
-GET http://localhost:8000/v1/runs/Zr49Cu49Al2
+### List All exploration jobs (Runs) created for a given Nominal Composition
+GET http://localhost:8000/v1/exploration-jobs/Zr49Cu49Al2
+Accept: application/json
+
+### List All exploration jobs (Runs) created for a given Nominal Composition including exploitation idata (SubRuns)
+GET http://localhost:8000/v1/exploration-jobs/Zr49Cu49Al2?exploitation_info=true
 Accept: application/json
 
 ###

@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from typing import List, Dict
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy.orm import Session, joinedload
+from typing import List, Dict, Optional
 from pathlib import Path as FilePath
 from datetime import datetime, timezone
 
@@ -87,8 +87,8 @@ def register_artifacts(
 def detect_and_register_artifacts(
     nominal_composition: str,
     sub_run_number: int,
-    run_path: FilePath,
     sub_run_path: FilePath,
+    run_path: Optional[FilePath],
 ) -> List[
     models.SimulationArtifact
 ]:  # each element in the returned List is an SQLAlchemy ORM object
@@ -100,6 +100,9 @@ def detect_and_register_artifacts(
     #   additional artifacts related to the LAMMPS simulations, since that
     #   SubRun is the reference structure.
     if sub_run_number == 0:
+
+        if run_path is None:
+            raise ValueError("run_path must be provided when sub_run_number is 0")
 
         artifacts.extend(
             register_artifacts(nominal_composition, run_path, EXPECTED_RUN_ARTIFACTS)
@@ -282,7 +285,7 @@ def schedule_exploration(
     for i in range(payload.num_simulations):
 
         #
-        # Check that the NominalComposition exists
+        # Check that the NominalComposition exists (TODO: replicated R1)
         #
         ########################################################################
         nc = (
@@ -298,7 +301,7 @@ def schedule_exploration(
             )
 
         #
-        # Checking if we have a 100-atom cell for the next Run
+        # Checking the consistency of directories (TODO: replicated R2)
         #
         ########################################################################
 
@@ -329,34 +332,33 @@ def schedule_exploration(
             )
 
         #
-        # Persisting to the DB
+        # Persisting to the DB (TODO: replicated R3)
         #
         ########################################################################
 
         # Create the SimulationArtifacts of default SubRun with id 0
         artifacts = detect_and_register_artifacts(
-            nc.name, 0, nc_id_run_dir, nc_sub_run_dir
+            nc.name, 0, nc_sub_run_dir, nc_id_run_dir
         )
 
         # Create the default SubRun with id 0
         sub_run = models.SubRun(
             sub_run_number=0,
             simulation_artifacts=artifacts,
-            status=schemas.Status.SCHEDULED.value,  # optional: default already
+            status=schemas.Status.SCHEDULED.value,  # optional: default already; TODO: build an application that will change it
         )
 
         # Create the Run and attach the SubRun
         run = models.Run(
             nominal_composition_id=nc.id,
             run_number=next_run_number,
-            status=schemas.Status.SCHEDULED.value,  # optional
+            status=schemas.Status.SCHEDULED.value,  # optional: default already; TODO: build an application that will change it
             sub_runs=[sub_run],  # ORM relationship binds them
         )
 
         # Persist both Run and SubRun with its SimulationArtifacts
         db.add(run)
         db.commit()
-        db.refresh(run)
 
     # TODO: if one of the runs fail for some reason must notify the user
     return schemas.GenericStatusResponse(
@@ -367,50 +369,178 @@ def schedule_exploration(
 
 # Schedules geometry augmentation (exploitation) for a given nominal composition and runs
 @router.post(
-    "/generate/{nominal_composition}/{id_run}/augment",
+    "/generate/{nominal_composition}/augment",
     response_model=schemas.GenericStatusResponse,
     status_code=status.HTTP_202_ACCEPTED,
     tags=["DataOps"],
-)  # TODO: set of id_runs and corresponding augmentation types in the request payload
+)
 def schedule_augmentation(
-    nominal_composition: str, id_run: str, db: Session = Depends(get_db)
+    nominal_composition: str,
+    payload: schemas.ScheduleExploitationRequest,
+    db: Session = Depends(get_db),
 ):
 
+    #
+    # Check that the NominalComposition exists (TODO: replicated R1)
+    #
+    ########################################################################
+
+    nc = db.query(models.NominalComposition).filter_by(name=nominal_composition).first()
+
+    if not nc:
+        raise HTTPException(
+            status_code=404,
+            detail=f"NominalComposition '{nominal_composition}' not found",
+        )
+
+    #
+    # Validate the input payload against the database. Checking if
+    # all Runs exist and that all corresponding SubRuns are new records.
+    #
+    ########################################################################
+
+    # Check Run IDs
+    run_ids = [item.id for item in payload.runs]
+    existing_runs = (
+        db.query(models.Run)
+        .filter(models.Run.id.in_(run_ids))
+        .options(joinedload(models.Run.sub_runs))
+        .all()
+    )
+
+    existing_run_ids = {run.id for run in existing_runs}
+    missing_run_ids = set(run_ids) - existing_run_ids
+
+    if missing_run_ids:
+        raise HTTPException(
+            status_code=404,
+            detail=f"The following run IDs were not found for NominalComposition '{nominal_composition}': {missing_run_ids}",
+        )
+
+    # Check SubRun IDs
+    requested_sub_run_map = {item.id: set(item.sub_runs) for item in payload.runs}
+
+    for run in existing_runs:
+
+        existing_sub_run_numbers = {sr.sub_run_number for sr in run.sub_runs}
+        submitted_sub_run_numbers = requested_sub_run_map.get(run.id, set())
+
+        overlap = [
+            sub_run_number
+            for sub_run_number in submitted_sub_run_numbers
+            if sub_run_number in existing_sub_run_numbers
+        ]
+
+        if overlap:
+            raise HTTPException(
+                status_code=404,
+                detail=f"The following sub_run IDs already exist for NominalComposition '{nominal_composition}' and run_number '{run.run_number}': {overlap}.",
+            )
+
+    #
+    # Checking the consistency of directories (TODO: replicated R2)
+    #
+    ########################################################################
+
+    nc_dir = DATA_ROOT / nominal_composition
+
+    if not nc_dir.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Directory for Nominal Composition '{nominal_composition}' not found",
+        )
+
+    for run in existing_runs:
+
+        nc_id_run_dir = nc_dir / "c/md/lammps/100" / str(run.run_number)
+        if not nc_id_run_dir.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"Directory for ID_RUN '{run.run_number}' not found for Nominal Composition '{nominal_composition}'",
+            )
+
+        submitted_sub_run_numbers = requested_sub_run_map.get(run.id, set())
+
+        for sub_run_number in submitted_sub_run_numbers:
+
+            nc_sub_run_dir = nc_id_run_dir / "2000/" / str(sub_run_number)
+
+            if not nc_sub_run_dir.exists():
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Directory for SUB_RUN '{sub_run_number}' not found for Nominal Composition '{nominal_composition}' and run_number '{run.run_number}'.",
+                )
+
+    #
+    # Persisting to the DB (TODO: replicated R3)
+    #
+    ########################################################################
+
+    for run in existing_runs:
+
+        submitted_sub_run_numbers = requested_sub_run_map.get(run.id, set())
+
+        for sub_run_number in submitted_sub_run_numbers:
+
+            nc_id_run_dir = nc_dir / "c/md/lammps/100" / str(run.run_number)
+            nc_sub_run_dir = nc_id_run_dir / "2000/" / str(sub_run_number)
+
+            # Create the SimulationArtifacts of SubRun
+            # TODO: the last argument nc_id_run_dir should be optional but it is not working
+            artifacts = detect_and_register_artifacts(
+                nominal_composition, sub_run_number, nc_sub_run_dir, nc_id_run_dir
+            )
+
+            # Create the SubRun
+            sub_run = models.SubRun(
+                sub_run_number=sub_run_number,
+                simulation_artifacts=artifacts,
+                status=schemas.Status.SCHEDULED.value,  # optional: default already; TODO: build an application that will change it
+            )
+
+            # Attach the SubRun to the run
+            run.sub_runs.append(sub_run)
+
+        # Persist SubRuns with their SimulationArtifacts
+        db.commit()
+
     return schemas.GenericStatusResponse(
-        message=f"Augmentation scheduled for '{nominal_composition}', run '{id_run}'.",
+        message=f"Augmentation scheduled for '{nominal_composition}'.",
         status=schemas.Status.SCHEDULED.value,
     )
 
 
-# List All Runs created for a given Nominal Composition
-@router.get(  # TODO: maybe this endpoint won't be used in the screen "3 - Pre-Deployment Exploitation DAG"
-    "/runs/{nominal_composition}",
-    response_model=List[schemas.RunResponse],
+# List All exploration jobs (Runs) created for a given Nominal Composition
+@router.get(
+    "/exploration-jobs/{nominal_composition}",
     tags=["DataOps"],
 )
 def list_nominal_composition_runs(
-    nominal_composition: str, db: Session = Depends(get_db)
+    nominal_composition: str,
+    exploitation_info: bool = Query(
+        default=False,
+        description="Whether to include exploitation (augmentation; SubRuns) details",
+    ),
+    db: Session = Depends(get_db),
 ):
 
-    runs = (
+    query = (
         db.query(models.Run)
         .join(models.Run.nominal_composition)
         .filter(models.NominalComposition.name == nominal_composition)
-        .order_by(models.Run.run_number)
-        .all()
     )
 
-    return [schemas.RunResponse.from_orm(run) for run in runs]
+    if exploitation_info:
+        query = query.order_by(models.Run.run_number).options(
+            joinedload(models.Run.sub_runs)
+        )
 
+    runs = query.all()
 
-# TODO: endpoint to return all transformations (sub-runs) of all runs
-#   existing for a selected NC. Let's work with a JSON like this:
-# {
-#     "transformations": [
-#         {"id_run": "1", "sub_runs": ["0", "4", "3", "7"]},
-#         {"id_run": "2", "sub_runs": ["0", "13", "14"]},
-#     ]
-# }
+    if exploitation_info:
+        return [schemas.ExplorationJobFullResponse.from_orm(run) for run in runs]
+    else:
+        return [schemas.ExplorationJobBaseResponse.from_orm(run) for run in runs]
 
 
 # Schedules ETL model (DBI building) for a given nominal composition

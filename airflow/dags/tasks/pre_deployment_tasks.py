@@ -2,6 +2,7 @@ import requests
 from airflow.operators.python import PythonOperator
 from airflow.exceptions import AirflowFailException
 import os
+import logging
 
 ##########################################################################
 #
@@ -59,11 +60,14 @@ def explore_cells(dag):
         )
 
         if response.status_code != 202:
-            raise AirflowFailException(
-                f"Failed to schedule exploration: {response.text}"
-            )
 
-        print(response.json())
+            # TODO: I'm not able to see that message in Airflow UI.
+            #   For instance, it fails for Zr46Cu46Al8 because there are not available folders.
+            error_message = f"Failed to schedule exploration (response status code {response.status_code}): {response.text}"
+
+            logging.error(error_message)
+
+            raise AirflowFailException(error_message)
 
     return PythonOperator(task_id="explore_cells", python_callable=_explore, dag=dag)
 
@@ -72,18 +76,13 @@ def exploit_augment(dag):
 
     def _exploit():
 
-        # TODO: that endpoint will be updated to have a set of id_runs and corresponding
-        #   augmentation types in the request payload.
-        response = requests.post(
-            f"{API_URL}/v1/generate/Zr49Cu49Al2/21/augment"
-        )  # TODO: parametrize
+        # TODO: the JSON will come in kwargs
+        response = requests.post(f"{API_URL}/v1/generate/Zr49Cu49Al2/augment", json={})
 
         if response.status_code != 202:
             raise AirflowFailException(
                 f"Failed to schedule augmentation: {response.text}"
             )
-
-        print(response.json())
 
     return PythonOperator(task_id="exploit_augment", python_callable=_exploit, dag=dag)
 
@@ -106,8 +105,6 @@ def etl_model(dag):
 
         if response.status_code != 202:
             raise AirflowFailException(f"Failed to schedule ETL model: {response.text}")
-
-        print(response.json())
 
     return PythonOperator(task_id="etl_model", python_callable=_etl, dag=dag)
 
@@ -136,7 +133,5 @@ def evaluate_model(dag):
             raise AirflowFailException(
                 f"Failed to schedule model evaluation: {response.text}"
             )
-
-        print(response.json())
 
     return PythonOperator(task_id="evaluate_model", python_callable=_evaluate, dag=dag)
