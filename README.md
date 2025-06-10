@@ -60,6 +60,8 @@ Below is an illustration of the MLOps workflow in terms of the Generate+ETL (GET
 
 ## 📐 Architecture Diagram of the MLOps System
 
+The architecture consists of a set of services (Streamlit, FastAPI, Airflow, and MLflow) which coordinate the execution of key components such as the data explorer and augmenter, the human-in-the-loop active learning process policy, and feature extraction pipeline.
+
 ![MLOPs system architecture](img/PRM_4_113603_MLOps_Architecture.drawio.png)
 
 - Streamlit: [http://localhost:8501](http://localhost:8501)
