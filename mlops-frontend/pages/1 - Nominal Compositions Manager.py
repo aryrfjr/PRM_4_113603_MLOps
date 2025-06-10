@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
+
 from utils.helpers import fetch_nominal_compositions
 from utils.helpers import API_URL
 
@@ -33,6 +34,8 @@ if menu == "Create":
     name = st.text_input("Name")
     description = st.text_area("Description")
 
+    # TODO: Don’t expose Airflow REST API directly to Streamlit; instead, let FastAPI to proxy that.
+    #   Keep Streamlit UI-only. All logic (even triggering pipelines) should be routed via FastAPI.
     if st.button("Create"):
         data = {"name": name, "description": description}
         resp = requests.post(f"{API_URL}/v1/nominal_compositions/", json=data)
@@ -46,22 +49,14 @@ if menu == "Create":
 
 # Read (GET) & List (GET)
 elif menu == "Read":
+
     st.subheader("📄 View Nominal Compositions")
 
     comps = fetch_nominal_compositions(st)
+
     if comps:
         df = pd.DataFrame(comps)
         st.dataframe(df)
-
-    selected = st.selectbox("Select to view details", [c["name"] for c in comps])
-
-    if selected:
-        resp = requests.get(f"{API_URL}/v1/nominal_compositions/{selected}")
-        if resp.status_code == 200:
-            data = resp.json()
-            st.json(data)
-        else:
-            st.error(f"❌ Error {resp.status_code}: {resp.text}")
 
 # Update (PUT)
 elif menu == "Update":
@@ -77,6 +72,8 @@ elif menu == "Update":
             "New Description", value=current.get("description", "")
         )
 
+        # TODO: Don’t expose Airflow REST API directly to Streamlit; instead, let FastAPI to proxy that.
+        #   Keep Streamlit UI-only. All logic (even triggering pipelines) should be routed via FastAPI.
         if st.button("Update"):
             payload = {"name": name, "description": description}
             resp = requests.put(
@@ -100,6 +97,8 @@ elif menu == "Delete":
             "Select Composition to Delete", [c["name"] for c in comps]
         )
 
+        # TODO: Don’t expose Airflow REST API directly to Streamlit; instead, let FastAPI to proxy that.
+        #   Keep Streamlit UI-only. All logic (even triggering pipelines) should be routed via FastAPI.
         if st.button("Delete"):
             resp = requests.delete(f"{API_URL}/v1/nominal_compositions/{selected}")
 

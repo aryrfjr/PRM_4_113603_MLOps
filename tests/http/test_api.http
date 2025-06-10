@@ -47,7 +47,7 @@ Content-Type: application/json
 ###
 
 ### Delete a nominal composition
-DELETE http://localhost:8000/v1/nominal_compositions/Zr48Cu50Al2
+DELETE http://localhost:8000/v1/nominal_compositions/Zr49Cu49Al2
 
 #
 # Endpoints scoped to the Data Generation & Labeling (DataOps) phase,
