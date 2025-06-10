@@ -17,11 +17,18 @@ AIRFLOW_API_URL = os.getenv("AIRFLOW_API_URL")
 #
 # Possible geometric transformations (shear, tension, compression)
 #
+# Usage Example:
+#
+# gt = GeometricTransformations.SHEAR_X_IN_Y_DIRECTION
+#
+# print(gt.label)  # -> "Shear X in Y direction"
+# print(gt.index)  # -> 0
+# print(gt.name)   # -> "SHEAR_X_IN_Y_DIRECTION"
+#
 ##########################################################################
 
 
 class GeometricTransformations(Enum):
-    REFERENCE_STRUCTURE = ("No transformations (reference structure)", 0)
     SHEAR_X_IN_Y_DIRECTION = ("Shear X in Y direction", 1)
     SHEAR_X_IN_Z_DIRECTION = ("Shear X in Z direction", 2)
     SHEAR_Y_IN_X_DIRECTION = ("Shear Y in X direction", 3)
@@ -70,11 +77,13 @@ def fetch_nominal_compositions(st_module: types.ModuleType):
         return []
 
 
-def fetch_nominal_composition_runs(
-    nominal_composition: str, st_module: types.ModuleType
+def fetch_nominal_composition_exploration_jobs(
+    nominal_composition: str, exploitation_info: bool, st_module: types.ModuleType
 ):
     try:
-        resp = requests.get(f"{API_URL}/v1/runs/{nominal_composition}")
+        resp = requests.get(
+            f"{API_URL}/v1/exploration-jobs/{nominal_composition}?exploitation_info={exploitation_info}"
+        )
         if resp.status_code == 200:
             return resp.json()
         else:
