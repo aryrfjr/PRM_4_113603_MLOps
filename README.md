@@ -64,7 +64,44 @@ The architecture consists of a set of services (Streamlit, FastAPI, Airflow, and
 
 ![MLOPs system architecture](img/PRM_4_113603_MLOps_Architecture.drawio.png)
 
-- Streamlit: [http://localhost:8501](http://localhost:8501)
-- REST API: [http://localhost:8000/docs](http://localhost:8000/docs)
-- Airflow: [http://localhost:8080](http://localhost:8080)
-- MLflow: [http://localhost:5000](http://localhost:5000)
+### 🔍 Key Services
+
+- **Streamlit**: Presents model status, results, and enables expert input (e.g., approve/label samples, restart pipelines).
+  - 🔗 [http://localhost:8501](http://localhost:8501)
+  
+- **FastAPI**: Controller layer that handles all user-triggered interactions (via Streamlit) and acts as the central gateway.
+  - 🔗 [http://localhost:8000/docs](http://localhost:8000/docs)
+  
+- **Airflow**: Orchestrator that manages explore/exploit workflows, simulation preparation, and training DAGs (Directed Acyclic Graphs).
+  - 🔗 [http://localhost:8080](http://localhost:8080)
+  
+- **MLflow**: The central model tracking hub for experiment tracking and model registry and lineage.
+  - 🔗 [http://localhost:5000](http://localhost:5000)
+  
+- **PostgreSQL**: For structured data storage, supporting Airflow, the feature store (lite), and experiment metadata tracking.
+
+### 🔍 Key Components
+
+- **DAG Explore**: Start/restart HPC sampling (CMD or new compositions) ... Generate new 100-atom cells via CMD for a given NC (configurational diversity). ... used when the current data coverage isn’t enough; adds new independent structures. ... 
+
+- **DAG Exploit/Augment**: Perform data augmentation (shear, tension, compression) on existing 100-atom cells. ... When the structural diversity of current configs needs improvement without running new CMD.
+
+- **DAG ETL Model**: Feature Store	Lite: DB with versioned descriptors (SOAP + bond info) used for training/inference.
+
+- **DAG Evaluate Model**: Evaluation Module ... RMSE per bond type, uncertainty scoring, active learning selection. ... Checks whether current model generalizes well. Decides if more Explore or Exploit is needed. ...
+  - Cross-validation ... same DBI ...
+  - Single-cell validation simulating production inference on one 100-atom cell. ... 
+
+- **HPC Interface**: Bridge to job submission on non-cloud-native systems (e.g., LAMMPS, QE via SLURM).
+  - ⚠️ ... It accurately mimics production pipelines while being cost-efficient for research/demo purposes. ... [third-party software used in atomistic simulations](https://github.com/aryrfjr/PRM_4_113603?tab=readme-ov-file#-third-party-software-used-in-atomistic-simulations)
+
+- **Local/S3 Store**: Stores raw MD output, DFT results, SOAP descriptors, trained models.
+  - ⚠️  ... Scripts produce outputs identical in structure to standard simulation tools (e.g., LOBSTER, QE), ensuring consistency between ML-generated data and traditional quantum chemistry workflows. ... 
+
+⚠️ **NOTE**: Explore vs Exploit is controlled by an active learning policy, e.g., based on prediction confidence or uncertainty.
+
+| Decision Point                                                                                | Trigger                                             |
+| --------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| **RMSE too high on current dataset, but data coverage seems OK (structurally)**               | → Run more **augmentations** (`/augment`)           |
+| **RMSE too high due to lack of configurational diversity** (not enough 100-atom cell samples) | → Create more **100-atom cells** (`/generate/{nc}`) |
+| **RMSE too high due to poor generalization across compositions**                              | → Add **new NCs** (`/generate/{new_nc}`)            |
