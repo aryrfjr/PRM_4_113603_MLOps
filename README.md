@@ -1,8 +1,12 @@
 # PRM_4_113603_MLOps
 
-Below is an illustration of the MLOps workflow in terms of the Generate+ETL (GETL) framework used in **Phys. Rev. Materials 4, 113603** (DOI: https://doi.org/10.1103/PhysRevMaterials.4.113603; or the [preprint](https://www.researchgate.net/publication/345634787_Chemical_bonding_in_metallic_glasses_from_machine_learning_and_crystal_orbital_Hamilton_population)):
+This repository contains a **Python-based** implementation of the MLOps workflow in terms of the Generate+ETL (GETL) framework used in **Phys. Rev. Materials 4, 113603** (DOI: https://doi.org/10.1103/PhysRevMaterials.4.113603; or the [preprint](https://www.researchgate.net/publication/345634787_Chemical_bonding_in_metallic_glasses_from_machine_learning_and_crystal_orbital_Hamilton_population)):
 
 ![MLOPs workflow used in PRM_4_113603](img/PRM_4_113603_MLOps.drawio.png)
+
+📝 **NOTE:** Check the original work at:
+
+- 🔗 https://github.com/aryrfjr/PRM_4_113603.
 
 ## 🧪 1. Problem Definition & Domain Context
 
@@ -60,48 +64,67 @@ Below is an illustration of the MLOps workflow in terms of the Generate+ETL (GET
 
 ## 📐 Architecture Diagram of the MLOps System
 
-The architecture consists of a set of services (Streamlit, FastAPI, Airflow, and MLflow) which coordinate the execution of key components such as the data explorer and augmenter, the human-in-the-loop active learning process policy, and feature extraction pipeline.
+The architecture consists of a set of services (**Streamlit**, **FastAPI**, **Airflow**, and **MLflow**) which coordinate the execution of key components such as the **data explorer** and **augmenter**, the **human-in-the-loop active learning** process, and **feature extraction** pipeline.
 
 ![MLOPs system architecture](img/PRM_4_113603_MLOps_Architecture.drawio.png)
 
 ### 🔍 Key Services
 
 - **Streamlit**: Presents model status, results, and enables expert input (e.g., approve/label samples, restart pipelines).
-  - 🔗 [http://localhost:8501](http://localhost:8501)
+  - 🔗 http://localhost:8501
   
-- **FastAPI**: Controller layer that handles all user-triggered interactions (via Streamlit) and acts as the central gateway.
-  - 🔗 [http://localhost:8000/docs](http://localhost:8000/docs)
+- **FastAPI**: Controller layer that handles all user-triggered interactions (via **Streamlit**) and acts as the central gateway.
+  - 🔗 http://localhost:8000/docs
   
-- **Airflow**: Orchestrator that manages explore/exploit workflows, simulation preparation, and training DAGs (Directed Acyclic Graphs).
-  - 🔗 [http://localhost:8080](http://localhost:8080)
+- **Airflow**: Orchestrator that manages explore/exploit workflows, simulation preparation, and training DAGs (the **Airflow** Directed Acyclic Graphs).
+  - 🔗 http://localhost:8080
   
 - **MLflow**: The central model tracking hub for experiment tracking and model registry and lineage.
-  - 🔗 [http://localhost:5000](http://localhost:5000)
+  - 🔗 http://localhost:5000
   
-- **PostgreSQL**: For structured data storage, supporting Airflow, the feature store (lite), and experiment metadata tracking.
+- **PostgreSQL**: For structured data storage, supporting **Airflow**, the **Feature Store** (**Lite**), and experiment metadata tracking.
 
 ### 🔍 Key Components
 
-- **DAG Explore**: Start/restart HPC sampling (CMD or new compositions) ... Generate new 100-atom cells via CMD for a given NC (configurational diversity). ... used when the current data coverage isn’t enough; adds new independent structures. ... 
+- **DAG Explore**: Start/restart the generation of new (or the first ones) 100-atom cells via CMD for a given Nominal Composition (NC). When used within the context of **human-in-the-loop active learning**, it can be used to improve **data coverage** (configurational diversity in terms of structure) without adding new NCs, or to bring better **generalization** by creating 100-atom cells for new NCs.
 
-- **DAG Exploit/Augment**: Perform data augmentation (shear, tension, compression) on existing 100-atom cells. ... When the structural diversity of current configs needs improvement without running new CMD.
+- **DAG Exploit/Augment**: Perform **data augmentation** (shear, tension, compression) on existing 100-atom cells when the structural diversity of current configs needs improvement without having to run a new CMD simulations.
 
-- **DAG ETL Model**: Feature Store	Lite: DB with versioned descriptors (SOAP + bond info) used for training/inference.
+- **DAG ETL Model**: Manage the portion of the **Feature Store Lite** that contains the **engineered features** with versioned descriptors (SOAP + bond info) used for training/inference. This is the task that creates the DBIs.
 
-- **DAG Evaluate Model**: Evaluation Module ... RMSE per bond type, uncertainty scoring, active learning selection. ... Checks whether current model generalizes well. Decides if more Explore or Exploit is needed. ...
-  - Cross-validation ... same DBI ...
-  - Single-cell validation simulating production inference on one 100-atom cell. ... 
+  - 📝 **NOTE**: The RMSE per bond type was the only metric used in the original work, but in this MLOps sytem ML model evaluation will be supported by:
+
+  | Metric                   | Purpose                                                                    |
+  | ------------------------ | -------------------------------------------------------------------------- |
+  | **RMSE per bond type**   | Diagnostic for model accuracy across chemically distinct interaction types |
+  | **Uncertainty score**    | Informs active learning decisions (which bonds to label next)              |
+  | **Acquisition function** | Combine uncertainty + diversity for smarter exploration                    |
+
+  - 📝 **NOTE**: Below the different kinds of structured databases used in this MLOps system:
+
+  | Type               | Stores What?                                   | Example                             |
+  | ------------------ | ---------------------------------------------- | ----------------------------------- |
+  | **Feature Store**  | Engineered features (e.g., SOAP vectors)       | Vector for Zr–Cu bond, version 3    |
+  | **Metadata Store** | Simulation params, job runs, uncertainty, etc. | SLURM job ID 12345 ran at temp=300K |
+  | **NC Registry**    | Canonical materials/entities                   | Zr49Cu49Al2, system ID 1001         |
+
+
+- **DAG Evaluate Model**: This is the task that provides user with the supporting information for the decision on next steps. This is a key part of **model evaluation** and **active learning** policy in the proposed **physics-informed MLOps system**, and allows the assessment of the predicted -ICOHP (bond strength) across various bond types in the metallic glasses using two types of analysis:
+
+  - **Cross-validation**: Evaluate model fit using a structured training/testing split from **PBSSDB** (per-bond single SOAP database) datasets, with a focus on hyperparameterized GPR fitting. Supports cross-NC validation (training and test sets from different NCs and their respective **PBSSDBs**). The core metric is the RMSE per bond type and it is suitable for model tuning, hyperparameter sweeps, and reproducibility.
+
+  - **Single-cell validation**: Validate the ML model in production-like conditions, using a real simulation from a specific 100-atom cell and comparing to the true DFT-calculated -ICOHP values. The training data comes from a mixed, pre-built DBI and it is useful for answering: "*How well does this model generalize to unseen, full-system data?*". It basically bridges the gap between **training/validation** and **production inference**.
+
+  - 📝 **NOTE**: Below is a summary of the **human-in-the-loop active learning** policy in the proposed **physics-informed MLOps system**:
+
+  | Decision Point                                                                            | Trigger                        |
+  | ----------------------------------------------------------------------------------------- | ------------------------------ |
+  | RMSE too high on current dataset, but data coverage seems OK (structurally)               | Run more **augmentations**     |
+  | RMSE too high due to lack of configurational diversity (not enough 100-atom cell samples) | Create more **100-atom cells** |
+  | RMSE too high due to poor generalization across compositions                              | Add **new NCs**                |
 
 - **HPC Interface**: Bridge to job submission on non-cloud-native systems (e.g., LAMMPS, QE via SLURM).
-  - ⚠️ ... It accurately mimics production pipelines while being cost-efficient for research/demo purposes. ... [third-party software used in atomistic simulations](https://github.com/aryrfjr/PRM_4_113603?tab=readme-ov-file#-third-party-software-used-in-atomistic-simulations)
+  - ⚠️ **NOTE**: Since there is no HPC resource accessible right now, the system has a component that mimics production pipelines while being cost-efficient for research/demo purposes. Click on the following link for more information about all the [third-party software used in atomistic simulations](https://github.com/aryrfjr/PRM_4_113603?tab=readme-ov-file#-third-party-software-used-in-atomistic-simulations).
 
 - **Local/S3 Store**: Stores raw MD output, DFT results, SOAP descriptors, trained models.
-  - ⚠️  ... Scripts produce outputs identical in structure to standard simulation tools (e.g., LOBSTER, QE), ensuring consistency between ML-generated data and traditional quantum chemistry workflows. ... 
-
-⚠️ **NOTE**: Explore vs Exploit is controlled by an active learning policy, e.g., based on prediction confidence or uncertainty.
-
-| Decision Point                                                                                | Trigger                                             |
-| --------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| **RMSE too high on current dataset, but data coverage seems OK (structurally)**               | → Run more **augmentations** (`/augment`)           |
-| **RMSE too high due to lack of configurational diversity** (not enough 100-atom cell samples) | → Create more **100-atom cells** (`/generate/{nc}`) |
-| **RMSE too high due to poor generalization across compositions**                              | → Add **new NCs** (`/generate/{new_nc}`)            |
+  - ⚠️ **NOTE**: Also due to the unavailability of HPC resource, the outputs generated by the standard simulation tools (e.g., LOBSTER, QE) in the original work **locally stored** is being used. Click on the following link to inspect some [data samples](https://github.com/aryrfjr/PRM_4_113603/tree/main/data_examples).
