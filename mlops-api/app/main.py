@@ -77,6 +77,11 @@ app.add_middleware(
 # TODO: Event-driven trigger (API could emit events, like job completed,
 #  to Airflow or MLflow to trigger downstream tasks.
 #
+# TODO: General refactoring for all endpoints following the MVC Separation
+#   of Concerns the Controller only handles HTTP protocol, request validation,
+#   and response formatting; whereas the Service implements domain/business
+#   logic, the Repository manages persistence, and the Model stays in the data layer.
+#
 ##########################################################################
 
 #
