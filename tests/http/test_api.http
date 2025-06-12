@@ -13,7 +13,7 @@
 ########################################################################
 
 ### Create a nominal composition
-POST http://localhost:8000/v1/nominal_compositions/
+POST http://localhost:8000/api/v1/nominal_compositions/
 Content-Type: application/json
 
 {
@@ -24,19 +24,19 @@ Content-Type: application/json
 ###
 
 ### Get a nominal composition by name
-GET http://localhost:8000/v1/nominal_compositions/Zr49Cu49Al2
+GET http://localhost:8000/api/v1/nominal_compositions/Zr49Cu49Al2
 Accept: application/json
 
 ###
 
 ### List all nominal compositions
-GET http://localhost:8000/v1/nominal_compositions/
+GET http://localhost:8000/api/v1/nominal_compositions/
 Accept: application/json
 
 ###
 
 ### Update a nominal composition
-PUT http://localhost:8000/v1/nominal_compositions/Zr49Cu49Al2
+PUT http://localhost:8000/api/v1/nominal_compositions/Zr49Cu49Al2
 Content-Type: application/json
 
 {
@@ -47,7 +47,7 @@ Content-Type: application/json
 ###
 
 ### Delete a nominal composition
-DELETE http://localhost:8000/v1/nominal_compositions/Zr49Cu49Al2
+DELETE http://localhost:8000/api/v1/nominal_compositions/Zr49Cu49Al2
 
 #
 # Endpoints scoped to the Data Generation & Labeling (DataOps) phase,
@@ -59,7 +59,7 @@ DELETE http://localhost:8000/v1/nominal_compositions/Zr49Cu49Al2
 ########################################################################
 
 ### Schedule exploration (DataOps)
-POST http://localhost:8000/v1/generate/Zr49Cu49Al2
+POST http://localhost:8000/api/v1/generate/Zr49Cu49Al2
 Content-Type: application/json
 
 {
@@ -69,7 +69,7 @@ Content-Type: application/json
 ###
 
 ### Schedule exploration (DataOps; augmentation) for multiple runs
-POST http://localhost:8000/v1/generate/Zr49Cu49Al2/augment
+POST http://localhost:8000/api/v1/generate/Zr49Cu49Al2/augment
 Content-Type: application/json
 
 { "runs": [
@@ -88,17 +88,17 @@ Content-Type: application/json
 ###
 
 ### List All exploration jobs (Runs) created for a given Nominal Composition
-GET http://localhost:8000/v1/exploration-jobs/Zr49Cu49Al2
+GET http://localhost:8000/api/v1/exploration_jobs/Zr49Cu49Al2
 Accept: application/json
 
 ### List All exploration jobs (Runs) created for a given Nominal Composition including exploitation idata (SubRuns)
-GET http://localhost:8000/v1/exploration-jobs/Zr49Cu49Al2?exploitation_info=true
+GET http://localhost:8000/api/v1/exploration_jobs/Zr49Cu49Al2?exploitation_info=true
 Accept: application/json
 
 ###
 
 ### Schedule ETL model generation
-POST http://localhost:8000/v1/etl-model
+POST http://localhost:8000/api/v1/etl_model
 Content-Type: application/json
 
 {
@@ -114,7 +114,7 @@ Content-Type: application/json
 ########################################################################
 
 ### Schedule model evaluation
-POST http://localhost:8000/v1/evaluate
+POST http://localhost:8000/api/v1/evaluate
 Content-Type: application/json
 
 {
@@ -128,5 +128,5 @@ Content-Type: application/json
 ########################################################################
 
 ### Ping check
-GET http://localhost:8000/v1/ping
+GET http://localhost:8000/api/v1/ping
 Accept: application/json
