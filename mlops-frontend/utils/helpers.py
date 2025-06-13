@@ -66,7 +66,7 @@ class GeometricTransformations(Enum):
 
 def fetch_nominal_compositions(st_module: types.ModuleType):
     try:
-        resp = requests.get(f"{API_URL}/v1/nominal_compositions/")
+        resp = requests.get(f"{API_URL}/api/v1/nominal_compositions/")
         if resp.status_code == 200:
             return resp.json()
         else:
@@ -82,7 +82,7 @@ def fetch_nominal_composition_exploration_jobs(
 ):
     try:
         resp = requests.get(
-            f"{API_URL}/v1/exploration-jobs/{nominal_composition}?exploitation_info={exploitation_info}"
+            f"{API_URL}/api/v1/exploration_jobs/{nominal_composition}?exploitation_info={exploitation_info}"
         )
         if resp.status_code == 200:
             return resp.json()

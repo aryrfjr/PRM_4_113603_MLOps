@@ -159,7 +159,9 @@ class SimulationArtifact(Base):
     )  # e.g., 'QE_scf_in'
     file_path: Mapped[str] = mapped_column(Text, nullable=False)
     file_size: Mapped[int] = mapped_column(nullable=True)
-    checksum: Mapped[str] = mapped_column(String(64), nullable=True)
+    checksum: Mapped[str] = mapped_column(
+        String(64), nullable=True
+    )  # TODO: Index this column for lookup; use it to detect duplicate artifacts
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.now(timezone.utc)
     )
