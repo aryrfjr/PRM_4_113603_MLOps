@@ -88,9 +88,9 @@ app.add_middleware(
 # API Routers
 #
 #######################################################################
-app.include_router(v1_endpoints_crud.router, prefix="/api/v1")
-app.include_router(v1_endpoints_dataops.router, prefix="/api/v1")
-app.include_router(v1_endpoints_modelops.router, prefix="/api/v1")
+app.include_router(v1_endpoints_crud.router, prefix="/api/v1/crud")
+app.include_router(v1_endpoints_dataops.router, prefix="/api/v1/dataops")
+app.include_router(v1_endpoints_modelops.router, prefix="/api/v1/modelops")
 
 
 #
