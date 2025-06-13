@@ -38,7 +38,7 @@ if menu == "Create":
     #   Keep Streamlit UI-only. All logic (even triggering pipelines) should be routed via FastAPI.
     if st.button("Create"):
         data = {"name": name, "description": description}
-        resp = requests.post(f"{API_URL}/v1/nominal_compositions/", json=data)
+        resp = requests.post(f"{API_URL}/api/v1/nominal_compositions/", json=data)
 
         if resp.status_code == 201:
             st.success(f"✅ Nominal composition '{name}' created.")
@@ -77,7 +77,7 @@ elif menu == "Update":
         if st.button("Update"):
             payload = {"name": name, "description": description}
             resp = requests.put(
-                f"{API_URL}/v1/nominal_compositions/{selected}", json=payload
+                f"{API_URL}/api/v1/nominal_compositions/{selected}", json=payload
             )
 
             if resp.status_code == 200:
@@ -100,7 +100,7 @@ elif menu == "Delete":
         # TODO: Don’t expose Airflow REST API directly to Streamlit; instead, let FastAPI to proxy that.
         #   Keep Streamlit UI-only. All logic (even triggering pipelines) should be routed via FastAPI.
         if st.button("Delete"):
-            resp = requests.delete(f"{API_URL}/v1/nominal_compositions/{selected}")
+            resp = requests.delete(f"{API_URL}/api/v1/nominal_compositions/{selected}")
 
             if resp.status_code == 204:
                 st.success(f"🗑️ '{selected}' deleted.")

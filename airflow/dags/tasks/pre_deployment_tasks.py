@@ -56,7 +56,7 @@ def explore_cells(dag):
         nsims = kwargs["dag_run"].conf.get("num_simulations", -1)
 
         response = requests.post(
-            f"{API_URL}/v1/generate/{nc}", json={"num_simulations": nsims}
+            f"{API_URL}/api/v1/generate/{nc}", json={"num_simulations": nsims}
         )
 
         if response.status_code != 202:
@@ -77,7 +77,9 @@ def exploit_augment(dag):
     def _exploit():
 
         # TODO: the JSON will come in kwargs
-        response = requests.post(f"{API_URL}/v1/generate/Zr49Cu49Al2/augment", json={})
+        response = requests.post(
+            f"{API_URL}/api/v1/generate/Zr49Cu49Al2/augment", json={}
+        )
 
         if response.status_code != 202:
             raise AirflowFailException(
@@ -101,7 +103,7 @@ def etl_model(dag):
             "interaction_type": "Zr-Cu",
         }
 
-        response = requests.post(f"{API_URL}/v1/etl-model", json=payload)
+        response = requests.post(f"{API_URL}/api/v1/etl_model", json=payload)
 
         if response.status_code != 202:
             raise AirflowFailException(f"Failed to schedule ETL model: {response.text}")
@@ -127,7 +129,7 @@ def evaluate_model(dag):
             "test_set": "Zr49Cu49Al2",
         }
 
-        response = requests.post(f"{API_URL}/v1/evaluate", json=payload)
+        response = requests.post(f"{API_URL}/api/v1/evaluate", json=payload)
 
         if response.status_code != 202:
             raise AirflowFailException(
