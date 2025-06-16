@@ -75,6 +75,7 @@ The architecture consists of a set of services (**Streamlit**, **FastAPI**, **Ai
   
 - **FastAPI**: Controller layer that handles all user-triggered interactions (via **Streamlit**) and acts as the central gateway.
   - 🔗 http://localhost:8000/docs
+  - 📝 **NOTE**: see a Java counterpart for this service in the repository [PRM_4_113603_MLOps_Java](https://github.com/aryrfjr/PRM_4_113603_MLOps_Java).
   
 - **Airflow**: Orchestrator that manages explore/exploit workflows, simulation preparation, and training DAGs (the **Airflow** Directed Acyclic Graphs).
   - 🔗 http://localhost:8080
