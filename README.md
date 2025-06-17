@@ -20,7 +20,7 @@ This repository contains an ongoing **Python-based** implementation of the MLOps
 
 - **Raw Data Sources**:
 
-  - Classical Molecular Dynamics (CMD) simulations are used to to generate an ensemble of smaller systems (100-atom cells) whose atomic level local environments are representative of those found on large-scale systems.
+  - Classical Molecular Dynamics (CMD) simulations are used to generate an ensemble of smaller systems (100-atom cells) whose atomic level local environments are representative of those found on large-scale systems.
 
   - Feasible first-principles electronic structure simulations based on DFT to compute -ICOHP values (**labels**) for the smaller systems.
 
@@ -99,7 +99,7 @@ The architecture consists of a set of services (**Streamlit**, **FastAPI**, **Ai
 
 - **DAG ETL Model**: Manage the portion of the **Feature Store Lite** that contains the **engineered features** with versioned descriptors (SOAP + bond info) used for training/inference. This is the task that creates the DBIs.
 
-  - 📝 **NOTE**: The RMSE per bond type was the only metric used in the original work, but in this MLOps sytem ML model evaluation will be supported by:
+  - 📝 **NOTE**: The RMSE per bond type was the only metric used in the original work, but in this MLOps system ML model evaluation will be supported by:
 
   | Metric                   | Purpose                                                                    |
   | ------------------------ | -------------------------------------------------------------------------- |
