@@ -70,19 +70,25 @@ The architecture consists of a set of services (**Streamlit**, **FastAPI**, **Ai
 
 ### 🔍 Key Services
 
-- **Streamlit**: Presents model status, results, and enables expert input (e.g., approve/label samples, restart pipelines).
-  - 🔗 http://localhost:8501
+- 📊 **UI and Control Integration**:
+
+  - **Streamlit**: Presents model status, results, and enables expert input (e.g., approve/label samples, restart pipelines).
+    - 🔗 http://localhost:8501
   
-- **FastAPI**: Controller layer that handles all user-triggered interactions (via **Streamlit**) and acts as the central gateway.
+  - **FastAPI**: Controller layer that handles all user-triggered interactions (via **Streamlit**) and acts as the central gateway.
   - 🔗 http://localhost:8000/docs
   
-- **Airflow**: Orchestrator that manages explore/exploit workflows, simulation preparation, and training DAGs (the **Airflow** Directed Acyclic Graphs).
-  - 🔗 http://localhost:8080
+- 🛠️ **Workflow Orchestration**:
+
+  - **Airflow**: Orchestrator that manages explore/exploit workflows, simulation preparation, and training DAGs (the **Airflow** Directed Acyclic Graphs).
+    - 🔗 http://localhost:8080
+
+- 🧪 **ML Lifecycle Tools**:
+
+  - **MLflow**: The central model tracking hub for experiment tracking and model registry and lineage.
+    - 🔗 http://localhost:5000
   
-- **MLflow**: The central model tracking hub for experiment tracking and model registry and lineage.
-  - 🔗 http://localhost:5000
-  
-- **PostgreSQL**: For structured data storage, supporting **Airflow**, the **Feature Store** (**Lite**), and experiment metadata tracking.
+  - **PostgreSQL**: For structured data storage, supporting **Airflow**, the **Feature Store** (**Lite**), and experiment metadata tracking.
 
 ### 🔍 Key Components
 
