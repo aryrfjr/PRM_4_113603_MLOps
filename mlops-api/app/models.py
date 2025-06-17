@@ -91,10 +91,12 @@ class SubRun(Base):
     )
     sub_run_number: Mapped[int] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="SCHEDULED")
-    scheduled_at: Mapped[datetime] = mapped_column(
+    scheduled_at: Mapped[datetime] = mapped_column(  # TODO: created_at ???
         DateTime, default=datetime.now(timezone.utc)
     )
-    completed_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=True
+    )  # TODO: updated_at ???
 
     run = relationship("Run", back_populates="sub_runs")
     descriptor_files = relationship(
