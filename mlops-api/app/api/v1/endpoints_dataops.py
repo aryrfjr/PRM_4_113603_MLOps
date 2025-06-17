@@ -16,7 +16,9 @@ from app.schemas import ArtifactType
 
 router = APIRouter()
 
-DATA_ROOT = FilePath("/data/ML/big-data-full")
+DATA_ROOT = FilePath(
+    "/data/ML/big-data-full"
+)  # TODO: environment variable from docker-compose.yml
 
 # Map filename patterns to artifact_type strings
 # NOTE: visit https://github.com/aryrfjr/PRM_4_113603/tree/main/scripts for
@@ -146,7 +148,7 @@ def schedule_exploration(
         # Check that the NominalComposition exists (TODO: replicated R1)
         #
         ########################################################################
-        nc = (
+        nc = (  # TODO: out of the loop over the number of simulations
             db.query(models.NominalComposition)
             .filter_by(name=nominal_composition)
             .first()
@@ -215,6 +217,7 @@ def schedule_exploration(
         )
 
         # Persist both Run and SubRun with its SimulationArtifacts
+        # TODO: out of the loop over the number of simulations
         db.add(run)
         db.commit()
 
