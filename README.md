@@ -30,6 +30,8 @@ This repository contains an ongoing **Python-based** implementation of the MLOps
  
     - 📝 **NOTE**: Within the context of Computational Chemistry/Materials Science, SOAP stands for ([Smooth Overlap of Atomic Positions](https://doi.org/10.1103/PhysRevB.87.184115)).
 
+    - 📝 **NOTE**: SOAP vectors are analogous to contextual word embeddings in **NLP** (Natural Language Processing), such as those produced by **BERT** (Bidirectional Encoder Representations from Transformers), in that they both encode rich, structured environments into high-dimensional vectors where geometric proximity reflects functional or semantic similarity.
+
   - Database of interactions (DBIs) includes **bond distance**, **bond strengths**, and **local atomic fingerprints**.
 
     - 📝 **NOTE**: In the end, what has been implemented was a **Feature Store Lite**, where each output DBI is the **structured** and **versioned input** to the ML model. 
